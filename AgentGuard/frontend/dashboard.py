@@ -76,11 +76,15 @@ with tab_playground:
                 payload = {
                     "agent_id": "playground-agent",
                     "tool": simulated_tool,
-                    "prompt": user_prompt
+                    "arguments": {"prompt": user_prompt}
                 }
                 
                 try:
-                    response = requests.post(f"{BACKEND_URL}/evaluate", json=payload)
+                    response = requests.post(
+                        f"{BACKEND_URL}/evaluate",
+                        json=payload,
+                        timeout=(3, 10)
+                    )
                     
                     if response.status_code == 200:
                         data = response.json()
@@ -139,9 +143,9 @@ with tab_dashboard:
 
     def fetch_events():
         try:
-            res = requests.get(f"{BACKEND_URL}/events")
+            res = requests.get(f"{BACKEND_URL}/events", timeout=(3, 10))
             return res.json() if res.status_code == 200 else []
-        except:
+        except requests.RequestException:
             return []
 
     events = fetch_events()

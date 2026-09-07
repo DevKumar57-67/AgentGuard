@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from .logger import read_events
 from .models import ToolCall
 from .guard import inspect_tool_call
 
@@ -29,6 +30,13 @@ def health():
 
 
 @app.post("/guard")
+@app.post("/evaluate")
 def guard(tool_call: ToolCall):
 
     return inspect_tool_call(tool_call)
+
+
+@app.get("/events")
+def events():
+
+    return read_events()

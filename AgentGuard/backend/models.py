@@ -1,11 +1,13 @@
 from typing import Any, Dict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ToolCall(BaseModel):
     """
     Represents a tool request made by an AI agent.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     tool: str = Field(..., min_length=1)
     arguments: Dict[str, Any] = Field(default_factory=dict)

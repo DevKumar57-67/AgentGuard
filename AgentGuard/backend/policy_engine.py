@@ -19,7 +19,7 @@ POLICIES = {
 
 def evaluate_tool(tool: str):
 
-    risk = POLICIES.get(tool, "AMBER")
+    risk = POLICIES.get(tool, "RED")
 
     if risk == "GREEN":
         return {
@@ -38,5 +38,5 @@ def evaluate_tool(tool: str):
     return {
         "risk": "RED",
         "decision": "BLOCK",
-        "reason": "Potentially destructive or highly sensitive operation."
+        "reason": "Unknown or potentially destructive operation."
     }

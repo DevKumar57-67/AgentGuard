@@ -1,3 +1,9 @@
 INFO:     127.0.0.1:53410 - "GET / HTTP/1.1" 200 OK
 INFO:     127.0.0.1:49316 - "GET /events HTTP/1.1" 200 OK
 INFO:     10.99.171.28:63936 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55386 - "GET /events HTTP/1.1" 200 OK
+INFO:     10.99.171.28:52481 - "GET / HTTP/1.1" 200 OK
+INFO:     10.99.171.28:52481 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50920 - "GET /events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53124 - "GET /events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61057 - "GET /events HTTP/1.1" 200 OK

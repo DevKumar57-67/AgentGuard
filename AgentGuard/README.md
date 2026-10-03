@@ -35,7 +35,7 @@ Executes Tool & Logs                             Pauses / Blocks Execution
 v
 +------------------------+
 |  SecOps Dashboard UI   |
-|       (Streamlit)      |
+|   (React + TypeScript) |
 +------------------------+
 
 ### Key Components
@@ -44,7 +44,7 @@ v
    - 🟢 **GREEN (ALLOW):** Low-risk read actions (e.g., `search_web`).
    - 🟡 **AMBER (APPROVAL_REQUIRED):** Sensitive state-changing actions (e.g., `send_email`).
    - 🔴 **RED (BLOCK):** Destructive system calls (e.g., `execute_shell`, `drop_database_table`) or detected prompt injections.
-3. **Interactive & SecOps Dashboard (`frontend/dashboard.py`):** A Streamlit interface providing an Interactive Sandbox Demo and a SecOps Audit & HITL Gateway for real-time human approvals.
+3. **Interactive & SecOps Dashboard (`frontend/src/`):** A responsive React + TypeScript interface providing a live audit dashboard, agent activity, an interactive policy playground, and a Human-in-the-Loop approval queue.
 4. **Agent Simulator (`simulator/agent.py`):** CLI utility for simulating tool execution requests[cite: 1].
 
 ---
@@ -61,7 +61,9 @@ AgentGuard/
 │   ├── models.py              # Pydantic Schemas
 │   └── policy_engine.py       # Policy Rules & Injection Heuristics
 ├── frontend/
-│   └── dashboard.py           # Streamlit SecOps UI & Interactive Sandbox
+│   ├── src/                   # React + TypeScript dashboard
+│   ├── package.json           # Frontend scripts and dependencies
+│   └── vite.config.ts         # Vite development/build configuration
 ├── simulator/
 │   └── agent.py               # Test Agent Tool-Call Generator
 ├── logs/                      # Event Audit Storage
@@ -94,8 +96,10 @@ python -m pip install -r requirements.txt
 python -m uvicorn backend.main:app --reload
 
 
-#Terminal 2
-python -m streamlit run frontend/dashboard.py
+#Terminal 2 (from the frontend directory)
+cd frontend
+npm install
+npm run dev
 
 #Terminal 3
 python simulator/agent.py
@@ -110,7 +114,9 @@ FastAPI – High-performance asynchronous API framework for JSON payload interce
 
 Uvicorn – ASGI web server implementation.
 
-Streamlit – Rapid web application framework for building the real-time security dashboard[cite: 1].
+React + TypeScript – Responsive, typed SecOps dashboard client.
+
+Vite – Frontend development server and production bundler.
 
 Pydantic – Data validation and schema enforcement for incoming payloads[cite: 1].
 

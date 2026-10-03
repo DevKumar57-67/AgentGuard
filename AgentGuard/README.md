@@ -143,3 +143,9 @@ re (Regex) – Regular expression engine for prompt injection and threat pattern
 #Submission Requirements
 
 #Github Url-https://github.com/DevKumar57-67/AgentGuard
+
+## Deploy to Render
+
+The repository-root `render.yaml` deploys the FastAPI backend and React dashboard as separate Render services. In Render, create a Blueprint from this repository and select `render.yaml`; the Blueprint builds the backend from `AgentGuard/` and the static site from `AgentGuard/frontend/`.
+
+The backend Blueprint uses a paid `0.5c-512mb` web plan and a 1 GB persistent disk mounted at `/var/data`, so SQLite audit events survive deploys and restarts. The frontend's `VITE_API_URL` is wired to the API service's external URL. If you use a custom dashboard domain, update `AGENTGUARD_CORS_ORIGINS` on the API service to that exact HTTPS origin.

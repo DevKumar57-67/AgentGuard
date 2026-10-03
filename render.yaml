@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: agentguard-api
+    runtime: python
+    rootDir: AgentGuard
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: AGENTGUARD_DATABASE_PATH
+        value: /var/data/agentguard.db
+      - key: AGENTGUARD_CORS_ORIGINS
+        value: https://agentguard-dashboard.onrender.com
+    disk:
+      name: agentguard-data
+      mountPath: /var/data
+      sizeGB: 1
+
+  - type: web
+    name: agentguard-dashboard
+    runtime: static
+    rootDir: AgentGuard/frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: agentguard-api
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -39,13 +39,16 @@ v
 +------------------------+
 
 ### Key Components
-1. **Interceptor Middleware (`backend/main.py`):** Asynchronous FastAPI REST API intercepting JSON tool-call payloads.
-2. **Policy Engine & Regex Scanner (`backend/policy_engine.py`):** Rule evaluation engine enforcing risk tiers:
+1. **API (`backend/api/`):** FastAPI routes for evaluation, guard interception, audit events, approvals, and health status.
+2. **Security Core (`backend/core/` and `backend/services/policy_service.py`):** Deterministic tool risk assessment, independent prompt injection detection, and policy orchestration:
    - 🟢 **GREEN (ALLOW):** Low-risk read actions (e.g., `search_web`).
    - 🟡 **AMBER (APPROVAL_REQUIRED):** Sensitive state-changing actions (e.g., `send_email`).
    - 🔴 **RED (BLOCK):** Destructive system calls (e.g., `execute_shell`, `drop_database_table`) or detected prompt injections.
-3. **Interactive & SecOps Dashboard (`frontend/src/`):** A responsive React + TypeScript interface providing a live audit dashboard, agent activity, an interactive policy playground, and a Human-in-the-Loop approval queue.
-4. **Agent Simulator (`simulator/agent.py`):** CLI utility for simulating tool execution requests[cite: 1].
+3. **Persistence (`backend/database/`):** SQLite connection and repository layer for durable security events and approval decisions.
+4. **Schemas and Services (`backend/schemas/`, `backend/models/`, `backend/services/`):** Pydantic API contracts, domain records, and application use cases separated from route handlers.
+5. **Configuration (`backend/config/`):** Environment-driven application, CORS, and database settings. Authentication is not enabled.
+6. **Dashboard (`frontend/src/`):** Responsive React + TypeScript interface for audit events, agent activity, policy outcomes, test interceptions, and human approvals.
+7. **Agent Simulator (`simulator/agent.py`):** CLI utility for simulating tool execution requests[cite: 1].
 
 ---
 
@@ -54,12 +57,17 @@ v
 ```text
 AgentGuard/
 ├── backend/
-│   ├── __init__.py
-│   ├── guard.py
-│   ├── logger.py
-│   ├── main.py                # FastAPI Interceptor Gateway
-│   ├── models.py              # Pydantic Schemas
-│   └── policy_engine.py       # Policy Rules & Injection Heuristics
+│   ├── api/                   # Route handlers and dependencies
+│   ├── auth/                  # Reserved; authentication is not enabled
+│   ├── config/                # Environment-backed settings
+│   ├── core/                  # Risk engine and prompt detector
+│   ├── database/              # SQLite connections and event repository
+│   ├── models/                # Domain records
+│   ├── schemas/               # Pydantic request/response models
+│   ├── services/              # Policy, interception, and event use cases
+│   ├── guard.py               # Legacy inspection entry point
+│   ├── main.py                # FastAPI application factory
+│   └── policy_engine.py       # Legacy policy import compatibility
 ├── frontend/
 │   ├── src/                   # React + TypeScript dashboard
 │   ├── package.json           # Frontend scripts and dependencies
@@ -103,6 +111,12 @@ npm run dev
 
 #Terminal 3
 python simulator/agent.py
+
+# Backend tests
+python -m unittest discover -s tests -v
+
+# Optional backend environment variables:
+# AGENTGUARD_DATABASE_PATH, AGENTGUARD_CORS_ORIGINS, AGENTGUARD_APP_TITLE, AGENTGUARD_VERSION
 
 
 #Tech Stack

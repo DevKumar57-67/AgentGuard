@@ -1,151 +1,146 @@
-# AgentGuard: Autonomous AI Agent Runtime Security & Action Gateway
+# AgentGuard
 
-**Problem Statement ID:** `[CC-GFG-01]`  
-**Track:** Agentic AI & AI Security  
-**Hackathon:** Career Catalyst Club x GeeksforGeeks 4-Hour Software Hackathon  
+AgentGuard is a runtime security gateway for AI agent tool calls. It evaluates requests before execution, blocks destructive or injection-like requests, routes sensitive actions for human approval, and records decisions in SQLite. The dashboard is a React + TypeScript app backed by a FastAPI API.
 
----
+## Features
 
-## 📌 Problem Summary
+- Deterministic risk tiers: `GREEN` allows, `AMBER` requires approval, and `RED` blocks.
+- Independent prompt-injection detection for destructive commands and instruction overrides.
+- Human-in-the-loop approve/deny decisions.
+- SQLite-backed event history that persists across backend restarts.
+- Interactive playground, agent activity, policy outcomes, and audit views.
+- Agent simulator using the `/guard` interception endpoint.
 
-As autonomous AI agents are increasingly deployed across enterprise workflows, their tool-calling capabilities (e.g., executing shell commands, sending emails, or modifying databases) expose critical security vulnerabilities. Prompt injections or reasoning loops can lead to catastrophic unauthorized actions—such as dropping database tables or leaking credentials.
-
-**AgentGuard** acts as an automated runtime security proxy and firewall middleware sitting between the AI Agent and host system tools. It intercepts tool calls before execution, evaluates them against policy rules and prompt injection heuristics, and categorizes them into clear risk tiers—incorporating real-time Human-in-the-Loop (HITL) authorization for sensitive operations.
-
----
-
-## 🏗️ Solution Architecture Overview
-
-AgentGuard uses a decoupled architecture to evaluate and guard AI agent execution in real time:
-
-+------------------+         1. Tool-Call Payload        +-------------------------+
-|  Autonomous AI   | ----------------------------------x | AgentGuard Interceptor  |
-|      Agent       |                                     |    (FastAPI Backend)    |
-+------------------+                                     +-------------------------+
-|
-2. Policy & Regex Engine
-|
-+--------------------------+--------------------------+
-|                                                     |
-🟢 GREEN (ALLOW)                                      🟡 AMBER / 🔴 RED
-|                                                     |
-Executes Tool & Logs                             Pauses / Blocks Execution
-|
-3. Real-Time Admin Alert
-v
-+------------------------+
-|  SecOps Dashboard UI   |
-|   (React + TypeScript) |
-+------------------------+
-
-### Key Components
-1. **API (`backend/api/`):** FastAPI routes for evaluation, guard interception, audit events, approvals, and health status.
-2. **Security Core (`backend/core/` and `backend/services/policy_service.py`):** Deterministic tool risk assessment, independent prompt injection detection, and policy orchestration:
-   - 🟢 **GREEN (ALLOW):** Low-risk read actions (e.g., `search_web`).
-   - 🟡 **AMBER (APPROVAL_REQUIRED):** Sensitive state-changing actions (e.g., `send_email`).
-   - 🔴 **RED (BLOCK):** Destructive system calls (e.g., `execute_shell`, `drop_database_table`) or detected prompt injections.
-3. **Persistence (`backend/database/`):** SQLite connection and repository layer for durable security events and approval decisions.
-4. **Schemas and Services (`backend/schemas/`, `backend/models/`, `backend/services/`):** Pydantic API contracts, domain records, and application use cases separated from route handlers.
-5. **Configuration (`backend/config/`):** Environment-driven application, CORS, and database settings. Authentication is not enabled.
-6. **Dashboard (`frontend/src/`):** Responsive React + TypeScript interface for audit events, agent activity, policy outcomes, test interceptions, and human approvals.
-7. **Agent Simulator (`simulator/agent.py`):** CLI utility for simulating tool execution requests[cite: 1].
-
----
-
-## 📁 Repository Structure
+## Architecture
 
 ```text
 AgentGuard/
 ├── backend/
-│   ├── api/                   # Route handlers and dependencies
-│   ├── auth/                  # Reserved; authentication is not enabled
-│   ├── config/                # Environment-backed settings
-│   ├── core/                  # Risk engine and prompt detector
-│   ├── database/              # SQLite connections and event repository
-│   ├── models/                # Domain records
-│   ├── schemas/               # Pydantic request/response models
-│   ├── services/              # Policy, interception, and event use cases
-│   ├── guard.py               # Legacy inspection entry point
-│   ├── main.py                # FastAPI application factory
-│   └── policy_engine.py       # Legacy policy import compatibility
+│   ├── api/                 # FastAPI route handlers and dependencies
+│   ├── auth/                # Reserved; authentication is not enabled
+│   ├── config/              # Environment-backed application settings
+│   ├── core/                # Risk engine and prompt-injection detector
+│   ├── database/            # SQLite connections and event repository
+│   ├── models/              # Domain records
+│   ├── schemas/             # Pydantic request and response models
+│   ├── services/            # Policy, interception, and event use cases
+│   ├── guard.py             # Legacy inspection entry point
+│   ├── main.py              # FastAPI app factory and startup
+│   └── policy_engine.py     # Legacy policy import compatibility
 ├── frontend/
-│   ├── src/                   # React + TypeScript dashboard
-│   ├── package.json           # Frontend scripts and dependencies
-│   └── vite.config.ts         # Vite development/build configuration
-├── simulator/
-│   └── agent.py               # Test Agent Tool-Call Generator
-├── logs/                      # Event Audit Storage
-├── requirements.txt           # Project Dependencies
-├── .gitignore
-└── README.md                  # Documentation
+│   └── src/                 # React + TypeScript dashboard
+├── logs/                    # Legacy JSONL audit output
+├── runtime/                 # Default SQLite database location
+├── simulator/               # CLI tool-call simulator
+└── tests/                   # Standard-library unittest suite
+```
 
+The Render Blueprint is at the Git repository root, one directory above this project folder: `../render.yaml`.
 
-# Clone the repository
-git clone [https://github.com/DevKumar57-67/AgentGuard.git](https://github.com/DevKumar57-67/AgentGuard.git)
+## Requirements
+
+- Python 3.10 or newer
+- Node.js 20 or newer and npm
+
+## Local Development
+
+From the cloned repository root, enter the project directory:
+
+```bash
 cd AgentGuard
+```
 
-# Create virtual environment
-python -m venv venv
+Create and activate a Python virtual environment, then install the backend requirements:
 
-# Activate virtual environment
-# On Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-
-# On Linux/macOS:
-source venv/bin/activate
-
-
-#Required Installations
-python -m pip install --upgrade pip
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
+```
 
-#Running the Project
-#Terminal 1
+On macOS or Linux, activate with `source .venv/bin/activate` instead.
+
+Start the backend from the `AgentGuard` project directory:
+
+```bash
 python -m uvicorn backend.main:app --reload
+```
 
+In another terminal, start the dashboard:
 
-#Terminal 2 (from the frontend directory)
-cd frontend
-npm install
+```bash
+cd AgentGuard/frontend
+npm ci
 npm run dev
+```
 
-#Terminal 3
-python simulator/agent.py
+The dashboard is available at `http://localhost:5173`; the API is at `http://127.0.0.1:8000`. Interactive API documentation is at `http://127.0.0.1:8000/docs`.
 
-# Backend tests
+To exercise the simulator, run `python simulator/agent.py` from the `AgentGuard` project directory while the backend is running.
+
+## API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/` | Gateway health and version |
+| `POST` | `/evaluate` | Evaluate a tool and prompt; returns a recorded event |
+| `POST` | `/guard` | Evaluate a tool call with arguments; returns the simulator decision |
+| `GET` | `/events` | List recorded events, newest first |
+| `POST` | `/action` | Approve or deny a recorded event |
+
+Example evaluation request:
+
+```json
+{
+  "agent_id": "demo-agent",
+  "tool": "send_email",
+  "prompt": "Send the project update to the client"
+}
+```
+
+Example approval request:
+
+```json
+{
+  "event_id": "<event-id>",
+  "action": "APPROVE"
+}
+```
+
+`action` accepts `APPROVE` or `DENY`. Decisions are recorded as `APPROVED_BY_ADMIN` or `DENIED_BY_ADMIN` in the event history.
+
+## Configuration
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `AGENTGUARD_DATABASE_PATH` | `runtime/agentguard.db` | SQLite database file |
+| `AGENTGUARD_CORS_ORIGINS` | `*` | Comma-separated allowed browser origins |
+| `AGENTGUARD_APP_TITLE` | `AgentGuard Security Gateway` | FastAPI app title |
+| `AGENTGUARD_VERSION` | `0.1.0` | Version returned by `GET /` |
+| `VITE_API_URL` | `http://127.0.0.1:8000` | Backend URL embedded in the frontend build |
+
+Use an absolute path for `AGENTGUARD_DATABASE_PATH` in deployment environments. Authentication is not currently implemented; do not expose the API as a protected production service without adding an authentication layer.
+
+## Tests and Frontend Checks
+
+Run the backend tests from the project directory:
+
+```bash
 python -m unittest discover -s tests -v
+```
 
-# Optional backend environment variables:
-# AGENTGUARD_DATABASE_PATH, AGENTGUARD_CORS_ORIGINS, AGENTGUARD_APP_TITLE, AGENTGUARD_VERSION
+Run frontend checks from `AgentGuard/frontend`:
 
-
-#Tech Stack
-📚 Tech Stack & Libraries Utilized
-Core Frameworks & Libraries
-Python 3.10+ – Core programming language[cite: 1].
-
-FastAPI – High-performance asynchronous API framework for JSON payload interception[cite: 1].
-
-Uvicorn – ASGI web server implementation.
-
-React + TypeScript – Responsive, typed SecOps dashboard client.
-
-Vite – Frontend development server and production bundler.
-
-Pydantic – Data validation and schema enforcement for incoming payloads[cite: 1].
-
-Pandas – Structured tabular processing for security audit logging.
-
-Requests – HTTP library for inter-service communication.
-
-re (Regex) – Regular expression engine for prompt injection and threat pattern detection[cite: 1].
-
-#Submission Requirements
-
-#Github Url-https://github.com/DevKumar57-67/AgentGuard
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
 
 ## Deploy to Render
 
-The repository-root `render.yaml` deploys the FastAPI backend and React dashboard as separate Render services. In Render, create a Blueprint from this repository and select `render.yaml`; the Blueprint builds the backend from `AgentGuard/` and the static site from `AgentGuard/frontend/`.
+The [Render Blueprint](../render.yaml) deploys the backend as a Python web service and the dashboard as a static site. In Render, create a new Blueprint from the repository and select `render.yaml`.
 
-The backend Blueprint uses a paid `0.5c-512mb` web plan and a 1 GB persistent disk mounted at `/var/data`, so SQLite audit events survive deploys and restarts. The frontend's `VITE_API_URL` is wired to the API service's external URL. If you use a custom dashboard domain, update `AGENTGUARD_CORS_ORIGINS` on the API service to that exact HTTPS origin.
+The Blueprint configures the backend root as `AgentGuard/` and the frontend root as `AgentGuard/frontend/`. It builds the UI with the API service URL, sets the API CORS origin to the generated dashboard URL, and rewrites static-site routes to `index.html` for the React app.
+
+SQLite is stored on a 1 GB persistent disk mounted at `/var/data`. Persistent disks require a paid Render web-service plan, configured here as `0.5c-512mb`; the static dashboard can use Render's free static hosting. If you use a custom dashboard domain, update `AGENTGUARD_CORS_ORIGINS` on the API service to that exact HTTPS origin.
